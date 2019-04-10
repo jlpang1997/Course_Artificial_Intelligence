@@ -1,11 +1,10 @@
 #pragma once 
-#define MAX_ROWS 100
-#define MAX_COLUMNS 100
+#define MAX_ROWS 50
+#define MAX_COLUMNS 50
 #include<stdio.h>
 #include<iostream>
 #include<math.h>
 #include<vector>
-#include<set>
 using namespace std;
 struct Pos {
 	int xpos;
@@ -38,7 +37,9 @@ public:
 	Pos get_next_pos(Pos, int);//按照方向得到下一个位置
 	bool In_list(vector<State>, Pos);//判断一个位置是否在队列里
 	void print_path();
-	bool IDA_star_recursion(int cur_deep,int max_deep);
+	bool IDA_star_recursion(Pos pos,int cur_deep,int max_deep);
+	void IDA_star();
+
 
 public:
 	Pos start, end;

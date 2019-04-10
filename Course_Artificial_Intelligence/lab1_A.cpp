@@ -1,9 +1,43 @@
 #include"lab1_A.h"
-
-
+#include<time.h>
+using namespace std;
 void Puzzle_Solving::Init(char *filepath)
 {
+	srand((unsigned)time(NULL));
 	FILE* fp;
+	fp = fopen(filepath, "w");
+	if (!fp)
+	{
+		printf("File open failed.");
+		exit(0);
+	}
+	fprintf(fp, "%d ", MAX_ROWS);
+	fprintf(fp, "%d ", MAX_COLUMNS);
+	fprintf(fp, "\n");
+	for (int i = 0; i < MAX_ROWS; i++)//0代表阻碍，1代表可走
+	{
+		for (int j = 0; j < MAX_COLUMNS; j++)
+		{
+			if (i == 0 || i == MAX_ROWS - 1 || j == 0 || j == MAX_COLUMNS - 1)
+			{
+				fprintf(fp, "0 ");//边界
+			}
+			else
+			{
+				int k = rand() % 4;
+				if(k)
+					fprintf(fp, "%d ",1);
+				else
+				{
+					fprintf(fp, "%d ", 0);
+				}
+			}
+				
+		}
+		fprintf(fp, "\n");
+	}
+	fclose(fp);
+
 	fp = fopen(filepath, "r");
 	if (!fp)
 	{
@@ -21,11 +55,23 @@ void Puzzle_Solving::Init(char *filepath)
 		}
 	}
 	fclose(fp);
-	for (int i = 0; i < rows; i++)//0代表阻碍，1代表可走
+	//print_path();
+	for (int i = 0; i < rows; i++)
 	{
 		for (int j = 0; j < cols; j++)
 		{
-			cout << puzzle[i][j].tag << " ";
+			if (puzzle[i][j].tag == 0)
+			{
+				cout << "#";
+			}
+			else if (puzzle[i][j].tag == 1)
+			{
+				cout << " ";
+			}
+			if (puzzle[i][j].tag == 2)
+			{
+				cout << "*";//路径用*表示
+			}
 		}
 		cout << endl;
 	}
@@ -68,9 +114,17 @@ void Puzzle_Solving::A_star()
 				Insert(open, state_insert);
 			}
 		}
-		state = open.back();
-		open.pop_back();//取出最后一个元素
-		puzzle[state.pos.xpos][state.pos.ypos].direction = state.pos.direction;
+		if(!open.empty())
+		{
+			state = open.back();
+			open.pop_back();//取出最后一个元素
+			puzzle[state.pos.xpos][state.pos.ypos].direction = state.pos.direction;
+		}
+		else
+		{
+			cout<< "no path" << endl;
+			return;
+		}
 	}
 	print_path();
 	
@@ -122,32 +176,61 @@ void Puzzle_Solving::print_path()
 	}
 	puzzle[pos.xpos][pos.ypos].tag = 2;
 	for (int i = 0; i < rows; i++)
-{
-	for (int j = 0; j < cols; j++)
 	{
-		if (puzzle[i][j].tag == 0)
+		for (int j = 0; j < cols; j++)
 		{
-			cout << "#";
+			if (puzzle[i][j].tag == 0)
+			{
+				cout << "#";
+			}
+			else if (puzzle[i][j].tag == 1)
+			{
+				cout << " ";
+			}
+			if (puzzle[i][j].tag== 2)
+			{
+				cout << "*";//路径用*表示
+			}
 		}
-		else if (puzzle[i][j].tag == 1)
-		{
-			cout << " ";
-		}
-		if (puzzle[i][j].tag== 2)
-		{
-			cout << "*";//路径用*表示
-		}
+		cout << endl;
 	}
-	cout << endl;
-}
 }
 
-bool Puzzle_Solving::IDA_star_recursion(int cur_deep,int max_deep)
+bool Puzzle_Solving::IDA_star_recursion(Pos pos,int cur_deep,int max_deep)
 {
-	if (cur_deep >=max_deep)
+	if ((cur_deep+Manhattan(pos)) >=max_deep)
 		return false;
+	if (pos.xpos == end.xpos&&pos.ypos == end.ypos)
+		return true;
 	else
 	{
+		for (int i = 1; i < 5; i++)
+		{
+			Pos next_pos;
+			next_pos = get_next_pos(pos, i);
+			if (puzzle[next_pos.xpos][next_pos.ypos].tag
+				&&puzzle[next_pos.xpos][next_pos.ypos].direction == -1)
+			{
+				puzzle[next_pos.xpos][next_pos.ypos].direction = next_pos.direction;
+				if (IDA_star_recursion(next_pos, cur_deep + 1, max_deep))
+					return true;
+			}
+		}
+		puzzle[pos.xpos][pos.ypos].direction = -1;
 		return false;
 	}
+}
+void Puzzle_Solving::IDA_star()
+{
+	puzzle[start.xpos][start.ypos].direction = 0;
+	int max_deep;
+	for ( max_deep = Manhattan(start); max_deep < (MAX_COLUMNS*MAX_ROWS); max_deep++)
+	{
+		if (IDA_star_recursion(start, 0, max_deep))
+		{
+			print_path();
+			return;
+		}
+	}
+	cout << "no path" << endl;
 }
